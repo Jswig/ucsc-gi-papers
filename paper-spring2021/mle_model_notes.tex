@@ -1,0 +1,101 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{mathpb}
+
+\bibliographystyle{ieeetr}
+
+\title{Notes on models for allele data}
+\author{Anders Poirel \\ UC Santa Cruz Genomics Institute}
+
+\begin{document}
+    
+\maketitle
+
+\section*{Notation}
+
+\begin{itemize} \itemsep -1pt
+    \item $\mathcal{S}$: entire dataset
+    \item $N$: number of loci with variations
+    \item $M_k$: number of variants at loci k
+    \item $x_{kr}$ variant at loci $k$ on first chromosome of sample $r$
+    \item $y_{kr}$ variant at loci $k$ on second chromosome of sample $r$ 
+    \item $x_{kir}$: variant $i$ at loci $k$ on first chromosome of sample $r$
+    \item $y_{kjr}$: variant $i$ at loci $k$ on second chromosome of sample $r$
+    \item $p_{ki| \alpha}$: probability of variant $i$ at loci $k$ given class $\alpha$
+    \item $\pi_\alpha$: probability of belonging to class $\alpha$
+    \item $n_{ik}$: count of variant $i$ at loci $k$ in $\mathcal{S}$
+\end{itemize}
+
+\section{Naive model}
+
+TODO
+
+\section{Symmetric mixture model}
+
+This generalize from the symmetric mixture model (SMM) described in 
+\cite{hofmann1998statistical} 
+In this model, at each loci, the variants follow a categorical distribution conditions 
+on class membership. In this version for a given locus both variants are treated as independant of each 
+other given the class membership $\alpha$. 
+The full likelyhood of the data 
+letting $\theta = (\pi_1, \ldots, \pi_K, \ldots, p_{11 | 1}, \ldots, p_{N M_N | K})$
+\[
+    L(\mathcal{S} | \theta) = \prod_{r=1}^L \left[
+        \sum_{\alpha=1}^K \pi_\alpha \prod_{k=1}^N P(x_{kir} | \alpha) P(y_{kjr} | \alpha)
+    \right]
+\]
+Define 
+\[
+    R_{\alpha r} = \begin{cases}
+        1 \: \text{if sample } r \: \text{comes from class} \: \alpha \\
+        0 \: \text{otherwise}
+    \end{cases}
+\] 
+Supposing the $R_{\alpha r}$s are known, the likelyhood and log-likelyhood are then 
+respectively 
+\begin{align*}
+    L(\mathcal{S}| \theta) &= \prod_{r=1}^L \prod_{\alpha=1}^K \left[
+        \pi_\alpha \prod_{k=1}^N P(x_{kir} | \alpha) P(y_{kjr} | \alpha)
+    \right]^{\mathcal{R}_{\alpha r}} \\
+    l(\mathcal{S}| \theta) &= \sum_{r=1}^L \sum_{\alpha=1}^K \mathcal{R}_{r\alpha} \left[
+        \log(\pi_\alpha) + \sum_{k=1}^N \left[ \log\left(P(x_{kir} | \alpha) \right) + \log\left(P(y_{kjr} | \alpha) \right) \right]
+    \right] \\
+    &= \sum_{r=1}^L \sum_{\alpha=1}^K  \mathcal{R}_{r\alpha} \left[
+        \log(\pi_\alpha) \sum_{k=1}^N \left[ \log(p_{ki \mid \alpha}) + \log(p_{kj \mid \alpha}) \right]
+    \right]
+\end{align*}
+
+We can find the MLEs for $\pi_\alpha$s and $p_{ki| \alpha}$s using the EM algorithm. The (E) step 
+is given by 
+\[
+    \mathbb{E}(\mathcal{R}_{r\alpha})^{(t+1)} \leftarrow \frac{
+        \pi_{\alpha}^{(t)} \prod_{k=1}^N P(x_{kir} | \alpha)^{(t)} P(y_{kjr} | \alpha)^{(t)}
+    }{
+        \sum_{\nu=1}^K \pi_{\nu}^{(t)}  \prod_{k=1}^N P(x_{kir} | \nu)^{(t)} P(y_{kjr} | \nu)^{(t)}
+    }
+\]
+The M-step is given by 
+\begin{align*}
+    \pi_{\alpha}^{(t)} &\leftarrow \frac{1}{L} \sum_{r=1}^L \mathbb{E}(\mathcal{R}_{r\alpha})^{(t)} \\
+    p_{ki | \alpha}^{(t)} &\leftarrow \frac{1}{2 L \pi_{\alpha}^{(t)}} 
+    \left[ 
+        \sum_{r: x_{kr} = x_{kir}} \mathbb{E}(\mathcal{R}_{r\alpha})^{(t)} +
+        \sum_{r: y_{kr} = y_{kir}} \mathbb{E}(\mathcal{R}_{r\alpha})^{(t)}
+    \right] 
+\end{align*}
+For more details on the EM algorithms, see \cite[Chapter~9.13.4]{wasserman2013all}
+
+\section{Asymmetric mixture model}
+
+TODO
+
+\section{Hidden Markov Model}
+
+This approach is based on the model described by Li and Stephen in \cite{li2003modeling}. \\
+TODO
+
+\bibliography{references}
+
+
+\end{document}
